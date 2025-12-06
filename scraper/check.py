@@ -1,34 +1,18 @@
 import requests
 from bs4 import BeautifulSoup
 
-# チェック対象ページ
-URL = "https://www.ikyu.com/00030497/?adc=1&cbc=1&cid=20260109&discsort=1&lc=1&ppc=1&rc=1&si=1&st=1&top=rooms"
+# Jina proxy 経由で取得する
+URL = "https://r.jina.ai/https://www.ikyu.com/00030497/?adc=1&cbc=1&cid=20260109&discsort=1&lc=1&ppc=1&rc=1&si=1&st=1&top=rooms"
 
-def fetch_html(url):
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
-    response = requests.get(url, headers=headers, timeout=10)
-    response.raise_for_status()
-    return response.text
+TARGET_WORDS = ["空室", "円", "残り"]
 
-def check_availability(html):
-    soup = BeautifulSoup(html, "lxml")
+resp = requests.get(URL, timeout=20)
+print("HTTP status:", resp.status_code)
+text = resp.text
 
-    # 例: “空室” や “円〜” があるか判定
-    keywords = ["空室", "円", "残り", "室"]
-    hit = any(word in soup.get_text() for word in keywords)
+print("=== sample text ===")
+print(text[:500])  # 最初の500文字＝動作確認
 
-    if hit:
-        return "可能性あり：ページ内に空室や料金情報が含まれています"
-    else:
-        return "検知できず：要 JS レンダリングの可能性あり"
-
-def main():
-    html = fetch_html(URL)
-    result = check_availability(html)
-    print("=== 空室検知結果 ===")
-    print(result)
-
-if __name__ == "__main__":
-    main()
+found = any(word in text for word in TARGET_WORDS)
+print("=== 判定結果 ===")
+print("FOUND" if found else "NOT FOUND")
